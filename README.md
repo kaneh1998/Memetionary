@@ -1,3 +1,3 @@
 # Memetionary
 
-Hosted at: memetionary.herokuapp.com
+Hosted at: <b>memetionary.herokuapp.com</b>
