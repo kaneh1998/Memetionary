@@ -12,15 +12,25 @@ const Player = require('./players');
 // SOCKET VARIABLES
 // Rooms - Stores all roomnumbers and if they are currently playing or not + number of players in the room
 let rooms = [];
-let drawTime = 45;
-let wordList = ['TREE', 'BUILDING', 'AIRPLANE', 'BEARD', 'TABLE', 'CHURCH', 'PEN', 'PINEAPPLE', 'BOTTLE', 'ANGRY', 'FIREWORKS', 'PUMPKIN', 'RECYCLE', 'GLASSES', 'LION', 'CAT', 
-                'MAILBOX', 'TRUCK', 'VOLLEYBALL', 'PEANUT', 'NOSE', 'OLYMPICS', 'EGG', 'GIRAFFE', 'FLOWER', 'BABY', 'BIBLE', 'MERMAID', 'NURSE', 'TEEPEE', 'TUTU', 'PIANO', 
-                'FLAG', 'OWL', 'NURSE', 'MUSIC', 'SLIPPER', 'LOLLIPOP', 'KIWI', 'BUS', 'CASTLE', 'ROBOT', 'RAINDROP', 'SKIP', 'KOALA', 'SPACE', 'DANCE', 'CRIB', 'MUM',
-              'THREAD', 'ZOMBIE', 'PILGRAM', 'PHOTO', 'FLAT', 'FACEBOOK', 'YOUTUBE', 'MASK', 'HOTEL', 'FIREWORKS', 'CONE', 'TOOTHBRUSH', 'STAR', 'STRAWBERRY', 'WOMAN',
-              'PIZZA', 'BANANA', 'DITCH', 'JAZZ', 'DOWNLOAD', 'BARGAIN', 'VITAMIN', 'HUSBAND', 'BARBER', 'PEANUT', 'SAUSAGE', 'SUNSHINE', 'GOLF', 'BOWLING', 'FOG', 
-              'HEAVY', 'DESK', 'PANIC', 'PAIN', 'MAGIC', 'CLOSET', 'DARK', 'FOUL', 'TACKLE', 'DICTIONARY', 'DANCE', 'CALENDAR', 'HELMET', 'LIGHTNING', 'COOKING',
-              'ASTRONAUT', 'TORNADO', 'MAGIC', 'MORNING', 'FAIL', 'BACKPACK'];
+let drawTime = 60;
+let wordList = [
+  'TREE', 'BUILDING', 'AIRPLANE', 'BEARD', 'TABLE', 'CHURCH', 'PEN', 'PINEAPPLE', 'BOTTLE', 'ANGRY', 'FIREWORKS', 'PUMPKIN', 'RECYCLE', 'GLASSES', 'LION', 'CAT', 
+  'MAILBOX', 'TRUCK', 'VOLLEYBALL', 'PEANUT', 'NOSE', 'OLYMPICS', 'EGG', 'GIRAFFE', 'FLOWER', 'BABY', 'BIBLE', 'MERMAID', 'NURSE', 'TEEPEE', 'TUTU', 'PIANO', 
+  'FLAG', 'OWL', 'NURSE', 'MUSIC', 'SLIPPER', 'LOLLIPOP', 'KIWI', 'BUS', 'CASTLE', 'ROBOT', 'RAINDROP', 'SKIP', 'KOALA', 'SPACE', 'DANCE', 'CRIB', 'MUM',
+  'THREAD', 'ZOMBIE', 'PILGRAM', 'PHOTO', 'FLAT', 'FACEBOOK', 'YOUTUBE', 'MASK', 'HOTEL', 'FIREWORKS', 'CONE', 'TOOTHBRUSH', 'STAR', 'STRAWBERRY', 'WOMAN',
+  'PIZZA', 'BANANA', 'DITCH', 'JAZZ', 'DOWNLOAD', 'BARGAIN', 'VITAMIN', 'HUSBAND', 'BARBER', 'PEANUT', 'SAUSAGE', 'SUNSHINE', 'GOLF', 'BOWLING', 'FOG', 
+  'HEAVY', 'DESK', 'PANIC', 'PAIN', 'MAGIC', 'CLOSET', 'DARK', 'FOUL', 'TACKLE', 'DICTIONARY', 'DANCE', 'CALENDAR', 'HELMET', 'LIGHTNING', 'COOKING',
+  'ASTRONAUT', 'TORNADO', 'MAGIC', 'MORNING', 'FAIL', 'BACKPACK', 'UNICORN', 'GOOSEBUMPS', 'ICE', 'FLAME', 'TOOTH', 'TABLE', 'CLOTHES', 'BRA', 'JACKET',
+  'PAINTING', 'PLATE', 'LEAF', 'BLOOD', 'SLUG', 'MOSS', 'FAMILY', 'CEREAL', 'UNDERWEAR', 'YAWN', 'FROG', 'ELEPHANT', 'DOG', 'CAT', 'ZEBRA', 'WAFFLE',
+  'GHOST', 'RUPERT', 'LATE', 'AFTERNOON', 'EVENING', 'BOSS', 'HIRE', 'PADDLE', 'PRIDE', 'MEETING', 'TURBAN', 'TYRE', 'PAY', 'WORRY', 'POVERTY', 
+  'SNEAKER', 'NINJA', 'FOOTBALL', 'SWING', 'INFECTION', 'CARROT', 'APPLE', 'WATERMELON', 'CHICKEN', 'PIG', 'MONKEY', 'WINDOW', 'PROGRAM'
+];
 
+// CUSTOM WORDLISTS
+let matesList = [
+  'KANE', 'LACHLAN', 'EVAN', 'JACOB', 'THEO', 'ANTHONY', 'CALLUM', 'SOPHIA',
+  'BRAD', 'CAMPBELL', 'NICK', 'LETITIA', 'HTOO', 'JAI'
+];
 
 // MIDDLEWARE
 app.use(session({
@@ -71,12 +81,12 @@ app.post('/join', (req, res) => {
   }
 
   let roomNum;
-  let roomJoined = findRoomByRoomID(req.body.room);
+  let roomJoined        = findRoomByRoomID(req.body.room);
 
-  req.session.roomID = req.body.room;
-  req.session.username = req.body.username;
+  req.session.roomID    = req.body.room;
+  req.session.username  = req.body.username;
 
-  // found room that exsists
+  // found room that exists
   if (roomJoined != null) {
     roomNum = roomJoined;
 
@@ -86,6 +96,13 @@ app.post('/join', (req, res) => {
       return;
       // IF GME NOT ACTIve - JOIN BUT DO NOT ADD ROOM
     } else {
+
+      // CHECK nobody in the room has the same username
+      if (roomJoined.playerList.find(o => o.username == req.session.username) != null) {
+        res.redirect('/');
+        return;
+      }
+
       roomJoined.playerNumber++;
       let player = new Player('0', req.body.username, req.body.room);
       roomJoined.playerList.push(player);
@@ -94,8 +111,9 @@ app.post('/join', (req, res) => {
     }
   }
 
-  let rum = new Room(req.body.room);
-  let player = new Player('0', req.body.username, req.body.room);
+  let rum         = new Room(req.body.room);
+  let player      = new Player('0', req.body.username, req.body.room);
+  player.isAdmin  = true;
 
   // Add player to the player list && push onto the rooms array
   rum.playerList.push(player);
@@ -109,11 +127,9 @@ app.get('/game', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
 });
 
-
 /* WEB SOCKET CODE
 *
 */
-
 const onConnection = socket => {
 
   socket.on("joinedRoom", (data) => {
@@ -127,7 +143,7 @@ const onConnection = socket => {
   });
 
   socket.on("updatePlayerList", (data) => {
-    io.to(data.roomID).emit("updatePlayerList", getCurrentPlayersInRoom(data.roomID));
+    io.to(data.roomID).emit("updatePlayerList", getCurrentPlayersInRoom(data.roomID), findRoomByRoomID(data.roomID));
   });
 
   socket.on("drawing", (data) => {
@@ -147,7 +163,15 @@ const onConnection = socket => {
 
     setReadyByUserAndRoom(data.username, data.roomID);
 
-    io.to(data.roomID).emit("updatePlayerList", getCurrentPlayersInRoom(data.roomID));
+    io.to(data.roomID).emit("updatePlayerList", getCurrentPlayersInRoom(data.roomID), findRoomByRoomID(data.roomID));
+  });
+
+  // KICK USER
+  socket.on('kickUser', (usernameToKick, clientData) => {
+
+    removeUserFromRoom(usernameToKick, clientData);
+
+    io.to(clientData.roomID).emit('updatePlayerList', getCurrentPlayersInRoom(clientData.roomID), findRoomByRoomID(clientData.roomID));
   });
 
   // GAME START - [client data]
@@ -186,7 +210,7 @@ const onConnection = socket => {
       numberOfPlayers: rooms.find(o => o.roomID == data.roomID).playerList.length
     }
 
-    io.to(data.roomID).emit("timerStart", obj);
+    io.to(data.roomID).emit("timerStart", obj, findRoomByRoomID(data.roomID));
   });
 
   socket.on('addScore', data => {
@@ -197,7 +221,11 @@ const onConnection = socket => {
 
   socket.on("endGame", (data) => {
 
-    findRoomByRoomID(data.roomID).gameActive = false;
+    try {
+      findRoomByRoomID(data.roomID).gameActive = false;
+    } catch {
+
+    }
 
     io.to(data.roomID).emit("endGame", data);
 
@@ -262,6 +290,19 @@ function findRoomByRoomID(roomID) {
 
 }
 
+// REMOVE USER FROM ROOM
+function removeUserFromRoom(username, clientData) {
+
+  let indexOfRoom = rooms.findIndex(o => o.roomID == clientData.roomID);
+
+
+  let roomPlayerList = rooms.find(o => o.roomID == clientData.roomID);
+
+  roomPlayerList.playerList = roomPlayerList.playerList.filter(o => o.username != username);
+
+  rooms[indexOfRoom] = roomPlayerList;
+
+}
 
 // DISCONNECT players from room
 function disconnectPlayerRoom(data) {
@@ -281,8 +322,14 @@ function disconnectPlayerRoom(data) {
     rooms = rooms.filter(o => o.roomID != room)
   }
 
+  // Check if the admin left and if so - assign new admin
   if (rooms.find(o => o.roomID == room) != null) {
-    io.to(room).emit("updatePlayerList", getCurrentPlayersInRoom(room));
+
+    if (roomSocketIn.playerList.find(o => o.isAdmin == true) == null) {
+      roomSocketIn.playerList[0].isAdmin = true;
+    }
+
+    io.to(room).emit("updatePlayerList", getCurrentPlayersInRoom(room), findRoomByRoomID(room));
   }
 
 }
@@ -339,6 +386,19 @@ function setReadyByUserAndRoom(username, roomID) {
 
 }
 
+// Returns bool is word has been sued already
+function CheckWordUsedAlready(gameObj, word) {
+
+  for (let i = 0; i < gameObj.usedWords.length; i++) {
+    if (gameObj.usedWords[i] == word) {
+      return true;
+    }
+  }
+
+  return false;
+
+}
+
 
 // GAMEPLAY - Select Word
 function GenerateGameWord(data) {
@@ -351,7 +411,14 @@ function GenerateGameWord(data) {
 
   if (data.lastWord != null) {
 
-    while (wordList[x] == data.lastWord) {
+    // Check that words are not being repeated.
+    while (wordList[x] == data.lastWord || CheckWordUsedAlready(data, wordList[x])) {
+
+      // All words have been used
+      if (wordList.length == data.usedWords.length) {
+        data.lastWord = "All words used!";
+        return "All words used! Start new game";
+      }
 
       x = Math.round(Math.random() * wordList.length - 1);
 
@@ -364,6 +431,9 @@ function GenerateGameWord(data) {
   }
 
   data.lastWord = wordList[x];
+  data.usedWords.push(wordList[x]);
+
+  console.log(data.usedWords);
 
   return wordList[x];
 

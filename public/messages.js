@@ -1,9 +1,18 @@
 chatSend.addEventListener('click', sendMessage);
 chatInput.addEventListener('keyup', function (e) {
+
+    window.scrollTo(0, 106);
+
     if (e.keyCode === 13) {
         sendMessage();
     }
 });
+
+// SCROLL WINDOW TO TOP OF CANVAS - SHOULD WORK ON MOST MOBILES
+chatBox.addEventListener('click', function (e) {
+    window.scrollTo(0, 106);
+});
+
 function sendMessage() {
 
     if (chatBox.value == '') {
@@ -12,8 +21,10 @@ function sendMessage() {
 
     let msg = clientData.username + ": " + chatBox.value;
 
+    // Got the correct word
     if (chatBox.value.toUpperCase().split(" ").includes(currentWordToGuess)) {
 
+        // Can't guess the word if you are the drawer
         if (clientData.isDrawing) {
             chatBoxMessages.innerHTML += "<h5 class='bg-danger text-light'>Don't cheat!</h5>";
             let xH = chatBoxMessages.scrollHeight; 
@@ -21,14 +32,14 @@ function sendMessage() {
             return;
         }
 
-        // Guessed correctly the word
+        
         let audio = new Audio('/public/audio/correct.wav');
         audio.play();
         msg = "<h5 class='bg-success'>" + clientData.username + " has guessed the word correctly!</h5>";
+        msg += "<h4 class='bg-info'>The word was... " + currentWordToGuess + "</h4>"; 
         socket.emit('addScore', clientData);
         socket.emit('updatePlayerList', clientData);
         onResetCanvas();
-        currentWordToGuess = null;
         endGame();
     }
 
@@ -46,22 +57,6 @@ function displayMessage(msg) {
     chatBoxMessages.scrollTo(0, xH);
 }
 
-function sendScoreList() {
-
-    if (scoresSentThisRound == true) {
-        return;
-    }
-
-    let msg = "<h4 class='border-bottom border-dark bg-info'>SCORES</h4>"
-
-    playerObj.forEach(element => {
-        msg += "<h5>" + element.username + " : " + element.score + "</h5>";
-    });
-
-    scoresSentThisRound = true;
-    socket.emit("message", msg, room);
-}
-
 // Gets a random word and displays it
 function generateGuessWord(word) {
 
@@ -75,6 +70,8 @@ function generateGuessWord(word) {
 
     startGameBtn.innerHTML = "Next Round";
     startGameBtn.style.backgroundColor = 'green';
+
+    console.log(gameObj);
 
     currentWordToGuess = word;
     if (!clientData.isDrawing) {

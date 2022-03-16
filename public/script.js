@@ -1,5 +1,6 @@
 let socket = io();
 
+let playerListCol = document.getElementById('playerListCol');
 let playerList = document.getElementById('playerList');
 let playerCounter = document.getElementById('playerCounter');
 let chatBoxMessages = document.getElementById('chatBoxMessages');
@@ -12,7 +13,9 @@ let brushSection = document.getElementById('brushSection');
 
 let scoresSentThisRound = false;
 
-// Colours + Width
+/**
+ * Game Variables
+ */
 let selectedColourObj;
 let currentWidthObj;
 
@@ -41,35 +44,35 @@ let audio = document.createElement("audio");
 let timerInterval;
 
 // GET ROOM ID
-let room = '123';
+let room = '123'; 
 // CLIENT DATA
 let clientData;
 function GetRoomID() {
     fetch('/userData')
-    .then(response => response.json())
-    .then(data => {
-        startGameBtn.style.display = "none";
-        audio.src = '/public/audio/bg-music.mp3';
-        audio.loop = true;
-        audio.volume = 0.5;
-        audio.play();
-        socket.emit("joinedRoom", data);
-        clientData = data;
-        room = data.roomID;
-        navBar.innerHTML = "Memetionary || RoomID: " + data.roomID;
-        socket.emit("updatePlayerList", data);
-    })
-    .catch((err) => {
-        startGameBtn.style.display = "none";
-        let errBtn = document.createElement('button');
-        errBtn.innerHTML = "Something went wrong... Click HERE";
-        errBtn.className = 'button btn-danger p-4';
-        errBtn.onclick = function (event) {
-            event.preventDefault();
-            window.location='/';
-        }
-        playerList.appendChild(errBtn);
-    });
+        .then(response => response.json())
+        .then(data => {
+            startGameBtn.style.display = "none";
+            audio.src = '/public/audio/bg-music.mp3';
+            audio.loop = true;
+            audio.volume = 0.5;
+            audio.play();
+            socket.emit("joinedRoom", data);
+            clientData = data;
+            room = data.roomID;
+            navBar.innerHTML = "Memetionary || RoomID: " + data.roomID;
+            socket.emit("updatePlayerList", data);
+        })
+        .catch((err) => {
+            startGameBtn.style.display = "none";
+            let errBtn = document.createElement('button');
+            errBtn.innerHTML = "Something went wrong... Click HERE";
+            errBtn.className = 'button btn-danger p-4';
+            errBtn.onclick = function (event) {
+                event.preventDefault();
+                window.location = '/';
+            }
+            playerList.appendChild(errBtn);
+        });
 }
 
 // BASIC SETUP OF CANVAS AND VARIABLES
@@ -128,7 +131,7 @@ function drawLine(x0, y0, x1, y1, lineWidthemit, color) {
     ctx.lineCap = 'round';
     ctx.stroke();
     ctx.closePath();
-    
+
 }
 
 function draw() {
@@ -259,6 +262,14 @@ function onResetCanvas(data) {
     ctx.fillRect(0, 0, w, h);
 }
 
+
+/**
+ * 
+ * @param dat Player data
+ * 
+ * dat contains PlayerData of all players in room
+ * 
+ */
 function onPlayerList(dat) {
 
     let readyCount = 0;
@@ -271,27 +282,90 @@ function onPlayerList(dat) {
         // clientData.username will be different for each person who joins!
         if (dat[i].ready) {
             readyCount++;
-            playerList.innerHTML += "<br/><button class='button rounded btn-success me-5 mt-1 p-1 playerReadyBtn' id='" + dat[i].username + "'>Ready</button><h4 style='display: inline;'>" + dat[i].username + " | " + dat[i].score + "</h4>";
+
+            // ADD ANOTHER CHECK IN HERE TO CEHCK IF CLIENTDATA.ISADMIN - THEN DRAW KICKBUTTONS
+
+            // Player IS ADMIN
+            if (dat[i].isAdmin) {
+                playerList.innerHTML += "<br/><button class='button rounded btn-success me-5 mt-1 p-1 playerReadyBtn' id='" + 
+                dat[i].username + "'>Ready</button><h4 class='fw-bold' style='display: inline;'>👑 " + 
+                dat[i].username + " | " + dat[i].score + "</h4>";
+                continue;
+            }
+
+            playerList.innerHTML += "<br/><button class='button rounded btn-success me-5 mt-1 p-1 playerReadyBtn' id='" + 
+            dat[i].username + "'>Ready</button><h4 style='display: inline;'>" + 
+            dat[i].username + " | " + dat[i].score + " | </h4><button class='button btn-info rounded playerKickBtn' id='" + dat[i].username + "Kick'>Kick</button>";
             continue;
         }
-            
-        playerList.innerHTML += "<br/><button class='button rounded btn-danger me-5 mt-1 p-1 playerReadyBtn' id='" + dat[i].username + "'>Ready</button><h4 style='display: inline;'>" + dat[i].username + " | " + dat[i].score + "</h4>";
+
+        if (dat[i].isAdmin) {
+            playerList.innerHTML += "<br/><button class='button rounded btn-danger me-5 mt-1 p-1 playerReadyBtn' id='" + 
+            dat[i].username + "'>Ready</button><h4 class='fw-bold' style='display: inline;'>👑 " + 
+            dat[i].username + " | " + dat[i].score + "</h4>";
+            continue;
+        }
+
+        playerList.innerHTML += "<br/><button class='button rounded btn-danger me-5 mt-1 p-1 playerReadyBtn' id='" + 
+        dat[i].username + "'>Ready</button><h4 style='display: inline;'>" + dat[i].username + " | " + 
+        dat[i].score + " | </h4><button class='button btn-info rounded playerKickBtn' id='" + dat[i].username + "Kick'>Kick</button>";
 
     }
 
     let playerBtns = document.getElementsByClassName('playerReadyBtn');
+    let kickBtns = document.getElementsByClassName('playerKickBtn');
 
-    // All players are ready - show the start game button
-    if (readyCount == playerBtns.length) {
-        startGameBtn.style.display = "inline";
-    } else {
-        startGameBtn.style.display = "none";
+    console.log(gameObj);
+    console.log(dat);
+
+    if (!gameObj.gameActive) {
+
+        // All players are ready - show the start game button
+        if (readyCount == playerBtns.length) {
+            checkIfAdmin(clientData);
+        } else {
+            startGameBtn.style.display = "none";
+        }
     }
+    
 
     for (let i = 0; i < playerBtns.length; i++) {
         playerBtns[i].addEventListener('click', setReadyButton, false);
+
+        if (i == 0) {
+            continue;
+        }
+        kickBtns[i - 1].addEventListener('click', kickUser, false);
     }
 
+}
+
+function kickUser(event) {
+
+    // Can't kick people if not admin
+    if (!clientData.isAdmin) {
+        return;
+    }
+
+    let words = event.target.id.split("Kick");
+    let userToKick = words[0];
+
+    console.log("kicking user");
+    console.log(clientData);
+
+    socket.emit('kickUser', userToKick, clientData);
+
+}
+
+
+function checkIfAdmin(clientData) {
+
+    if (clientData.isAdmin) {
+        startGameBtn.style.display = "inline";
+
+    } else {
+        startGameBtn.style.display = "none";
+    }
 }
 
 let setReadyButton = function () {
@@ -312,16 +386,27 @@ let setReadyButton = function () {
 GetRoomID();
 init();
 
-socket.on("updatePlayerList", playerList => {
+socket.on("updatePlayerList", (playerList, gameData) => {
     playerObj = playerList;
+    gameObj = gameData;
+    if (playerList.find(o => o.username == clientData.username) == null) {
+        console.log("Kicked form the game");
+        window.location = '/'; 
+    }
+
     clientData = playerList.find(o => o.username == clientData.username);
     onPlayerList(playerList);
 });
+
 socket.on("drawing", onDrawingEvent);
+
 socket.on("resetCanvas", onResetCanvas);
+
 socket.on("disconnect", msg => {
+    console.log("Disconnect siocket ON script");
     displayMessage(msg);
 });
+
 socket.on('addScore', data => {
     clientData = data;
 });

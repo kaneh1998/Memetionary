@@ -8,6 +8,15 @@ let numOfPlayersInGame;
 
 startGameBtn.addEventListener('click', startGame);
 function startGame(e) {
+
+    console.log(clientData);
+    // Make sure only the admin can start a game
+    if (!clientData.isAdmin) {
+        displayMessage("Only the admin can use this!");
+        startGameBtn.style.display = "none";
+        return;
+    }
+
     scoresSentThisRound = false;
     onResetCanvas();
     socket.emit("resetCanvas", room);
@@ -71,6 +80,7 @@ function onTimerUpdate(msg) {
         brushSection.style.display = "none";
         displayMessage("Guess the word in the chat!");
     }
+    playerListCol.style.display = "none";
     gameTimer = msg.time;
     generateGuessWord(msg.word);
     timer.innerHTML = gameTimer;
@@ -82,19 +92,24 @@ function makeCanvasUnscrollable() {
     canvas.style.touchAction = "none";
 }
 
-
+// Called on the end of the round when word is geussed or time runs out
 function resetGame() {
 
+    // Display player list
+    playerListCol.style.display = "inline";
+    // Canvas is scrollable
     canvas.style.touchAction = "";
     window.scrollTo(0, 0);
-    timer.innerHTML = "Times up";
-    generateGuessWord("Word will appear here...");
-    startGameBtn.style.display = "inline";
+    // The word that was geussed correctly
+    timer.innerHTML = currentWordToGuess;
+    // Make it say - 'USER got the correct word'
+    generateGuessWord(currentWordToGuess);
+    checkIfAdmin(clientData);
     gameStarted = false;
     clientData.isDrawing = false;
+    currentWordToGuess = null;
     onResetCanvas();
     clearInterval(timerInterval);
-    sendScoreList();
 }
 
 function gameComplete(roomObj) {
@@ -102,7 +117,8 @@ function gameComplete(roomObj) {
     generateGuessWord("GAME OVER");
 }
 
-socket.on('timerStart', msg => {
+socket.on('timerStart', (msg, gameData) => {
+    gameObj = gameData;
     onTimerUpdate(msg);
 })
 socket.on('endGame', () => {

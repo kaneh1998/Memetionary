@@ -7,6 +7,7 @@ class Room {
     playerList;         // Array of Players
     totalGamesPlayed;   // Number of full games played
     lastWord;           // Last word that was used
+    usedWords;          // Array of words;
 
     constructor(roomID) {
         this.roomID             = roomID;
@@ -16,6 +17,7 @@ class Room {
         this.roundNumber        = 0;
         this.totalGamesPlayed   = 0;
         this.lastWord           = null;
+        this.usedWords          = new Array();
     }
 
     setGameActive(TorF) {

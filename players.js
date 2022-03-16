@@ -7,6 +7,7 @@ class Player {
     isDrawing;
     hasDrawn;
     score;
+    isAdmin;
 
     constructor(socketID, username, roomID) {
 
@@ -17,6 +18,7 @@ class Player {
         this.isDrawing  = false;
         this.hasDrawn   = false;
         this.score      = 0;
+        this.isAdmin    = false;
     }
 
 }

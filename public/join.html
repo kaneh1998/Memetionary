@@ -19,20 +19,25 @@
         <div class="row pt-5">
             <div class="col">
                 <h1 class="text-center display-3"><img class="me-3" src="/public/icon.png" height=64 />Memetionary</h1>
-                <h1 class="pt-5 text-center">Hello bingus, <br />Please type in the room number and a username to join</h1>
+                <h1 class="pt-5 text-center">Hello bingus, <br />Please type in the room number and a username to join
+                </h1>
                 <div class="container">
                     <form class="" id='join-form' method="POST" action="/join">
                         <div class="container mt-5 pb-3 pt-4 bg-dark text-light rounded border" id='join-box'>
                             <label class="form-label fs-4" id='join-username-text'>Username</label>
-                            <input class="form-control" id='username' type='text' name='username' autocomplete="off" required />
+                            <input class="form-control" id='username' type='text' name='username' autocomplete="off"
+                                required />
                             <label class="form-label mt-4 fs-4" id='join-room-text'>Room ID</label>
-                            <input class="form-control" id='roomID' type='text' name='room' autocomplete="off" required />
-                            <button class='button btn-success text-light p-2 rounded mt-3' id='join-button' type='submit'>Join
+                            <input class="form-control" id='roomID' type='text' name='room' autocomplete="off"
+                                required />
+                            <button class='button btn-success text-light p-2 rounded mt-3' id='join-button'
+                                type='submit'>Join
                                 Game!</button>
                             <p id='join-msg'></p>
                         </div>
                     </form>
-                    <h2 class="mt-2 text-danger">Note: You cannot join a room while a game is currently taking place.</h2>
+                    <h2 class="mt-2 text-danger">Note: You cannot join a room while a game is currently taking place.
+                    </h2>
                 </div>
             </div>
         </div>
