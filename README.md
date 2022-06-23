@@ -11,4 +11,3 @@ Pictionary-like game that utilises web sockets to play with your friends
 - Express
 - HTML / CSS / JS
 - Bootstrap
-
